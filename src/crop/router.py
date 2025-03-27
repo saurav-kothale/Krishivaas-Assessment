@@ -1,4 +1,4 @@
-from fastapi import APIRouter, File, UploadFile, HTTPException, Depends
+from fastapi import APIRouter, File, UploadFile, HTTPException, Depends, status
 import boto3
 from botocore.exceptions import NoCredentialsError, PartialCredentialsError
 from uuid import uuid4
@@ -43,7 +43,7 @@ def upload_to_s3(file_content, unique_filename, content_type):
 
 
 
-@crop_router.post("/upload_media")
+@crop_router.post("/upload_media", status_code=200)
 async def upload_media(file: UploadFile = File(...), background_tasks: BackgroundTasks = BackgroundTasks()):
     try:
 
@@ -67,7 +67,7 @@ async def upload_media(file: UploadFile = File(...), background_tasks: Backgroun
         raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
     
 
-@crop_router.get("/crop")
+@crop_router.get("farmer/crop", status_code=200)
 def get_crop_status(db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
     try:
 
@@ -117,7 +117,11 @@ async def upload_crop_media(
     db.commit()
     db.refresh(new_crop)
 
-    return {"message": "Crop media uploaded successfully", "crop": new_crop}
+    return {
+        "crop": new_crop,
+        "status" : status.HTTP_201_CREATED,
+        "message": "Crop media uploaded successfully"
+    }
     
 
 @crop_router.put("/government/update/{crop_id}", status_code=200)
@@ -127,23 +131,26 @@ def update_crop_health_status(
     db: Session = Depends(get_db),
     current_user: str = Depends(get_current_user),
 ):
-    # Ensure the user is a government user
+  
     print(current_user["role"])
     if current_user["role"] != "goverment":
 
         raise HTTPException(status_code=403, detail="Access denied")
 
-    # Fetch the crop entry
     crop = db.query(Crop).filter(Crop.id == crop_id).first()
     if not crop:
         raise HTTPException(status_code=404, detail="Crop not found")
 
-    # Update the health status
     crop.health_status = schema.health_status.value
     db.commit()
     db.refresh(crop)
 
-    return {"message": "Crop health status updated successfully", "crop": crop}
+    return {
+        "crop": crop,
+        "status" : status.HTTP_202_ACCEPTED,
+        "message": "Crop health status updated successfully",
+        
+    }
 
 
 @crop_router.get("/government/pending_health_status", status_code=200)
@@ -155,7 +162,6 @@ def get_pending_health_status(
     if current_user["role"] != "government":
         raise HTTPException(status_code=403, detail="Access denied")
 
-    # Fetch all crops with pending health status
-    pending_crops = db.query(Crop).filter(Crop.health_status == "pending").all()
+    pending_crops = db.query(Crop).filter(Crop.health_status == "pending", Crop.is_deleted == False).all()
 
     return {"pending_crops": [crop.to_dict() for crop in pending_crops]}

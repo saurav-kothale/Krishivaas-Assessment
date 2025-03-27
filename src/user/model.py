@@ -4,8 +4,8 @@ from sqlalchemy.orm import relationship
 from src.utils.base_model import BaseModel
 
 
-class Farmer(Base, BaseModel):
-    __tablename__ = "Farmer"
+class User(Base, BaseModel):
+    __tablename__ = "User"
     user_id = Column(String, primary_key=True)
     role = Column(String, nullable=False)
     name = Column(String, nullable=False)

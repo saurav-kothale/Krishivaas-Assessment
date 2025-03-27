@@ -5,7 +5,7 @@ from sqlalchemy import pool
 
 from alembic import context
 import os
-from src.user.model import Farmer
+from src.user.model import User
 from src.farm.model import Farm
 from src.crop.model import Crop
 # from src.farm.model import Farm

@@ -11,7 +11,7 @@ from fastapi.exceptions import HTTPException
 farm_router = APIRouter()
 
 
-@farm_router.post('/farm', status_code=status.HTTP_201_CREATED)
+@farm_router.post('/farm', status_code=200)
 def create_farm(schema: FarmSchema, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
     if current_user.get("role") != "farmer":
         raise HTTPException(
@@ -20,7 +20,7 @@ def create_farm(schema: FarmSchema, db: Session = Depends(get_db), current_user:
         )
 
     new_farm = Farm(
-        farm_id=str(uuid.uuid4()),  # Generate a unique ID for the farm
+        farm_id=str(uuid.uuid4()),
         latitude=schema.latitude,
         longitude=schema.longitude,
         city=schema.city,
@@ -38,7 +38,7 @@ def create_farm(schema: FarmSchema, db: Session = Depends(get_db), current_user:
     }
 
 
-@farm_router.get('/farms', status_code=status.HTTP_200_OK)
+@farm_router.get('/farms', status_code=200)
 def get_all_farms(db: Session = Depends(get_db)):
     farms = db.query(Farm).filter(Farm.is_deleted == False).all()
 
@@ -54,8 +54,8 @@ def get_all_farms(db: Session = Depends(get_db)):
         "status" : status.HTTP_200_OK
     }
 
-# Get a single farm by ID
-@farm_router.get('/farm/{farm_id}', status_code=status.HTTP_200_OK)
+
+@farm_router.get('/farm/{farm_id}', status_code=200)
 def get_farm_by_id(farm_id: str, db: Session = Depends(get_db)):
     farm = db.query(Farm).filter(Farm.farm_id == farm_id, Farm.is_deleted == False).first()
 
@@ -68,8 +68,7 @@ def get_farm_by_id(farm_id: str, db: Session = Depends(get_db)):
         "status" : status.HTTP_200_OK
     }
 
-# Update a farm
-@farm_router.put('/farm/{farm_id}', status_code=status.HTTP_200_OK)
+@farm_router.put('/farm/{farm_id}', status_code=200)
 def update_farm(farm_id: str, schema: FarmSchema, db: Session = Depends(get_db), current_user : str = Depends(get_current_user)):
     farm = db.query(Farm).filter(Farm.farm_id == farm_id, Farm.is_deleted == False).first()
     if not farm:
@@ -91,7 +90,7 @@ def update_farm(farm_id: str, schema: FarmSchema, db: Session = Depends(get_db),
     }
 
 # Delete a farm
-@farm_router.delete('/farm/{farm_id}', status_code=status.HTTP_204_NO_CONTENT)
+@farm_router.delete('/farm/{farm_id}', status_code=200)
 def delete_farm(farm_id: str, db: Session = Depends(get_db)):
 
     farm = db.query(Farm).filter(Farm.farm_id == farm_id, Farm.is_deleted == False).first()

@@ -11,6 +11,7 @@ class Farm(Base, BaseModel):
     longitude = Column(Float, nullable=False)
     city = Column(String, nullable=False)
     state = Column(String, nullable=False)
-    user_id = Column(String, ForeignKey("Farmer.user_id"), nullable=False)
+    user_id = Column(String, ForeignKey("User.user_id"), nullable=False)
+
 
 

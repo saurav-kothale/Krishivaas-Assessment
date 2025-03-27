@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from database import get_db
-from src.user.model import Farmer
+from src.user.model import User
 from src.user.schema import UserSchema, UserLogin
 from src.utils.auth_utils import pwd_context
 import uuid
@@ -18,7 +18,7 @@ ACCESS_TOKEN_EXPIRE_MINUTE = int(os.environ["ACCESS_TOKEN_EXPIRE_MINUTE"])
 
 auth_router = APIRouter()
 
-@auth_router.post("/register")
+@auth_router.post("/register", status_code=200)
 def register_farmer(farmer : UserSchema, db : Session = Depends(get_db)):
     hashed_password = pwd_context.hash(farmer.password)
 
@@ -28,7 +28,7 @@ def register_farmer(farmer : UserSchema, db : Session = Depends(get_db)):
             detail="Please provide your government id"
         )
 
-    new_farmer = Farmer(
+    new_farmer = User(
         user_id = str(uuid.uuid4()),
         role = farmer.role.value,
         name = farmer.name,
@@ -46,10 +46,10 @@ def register_farmer(farmer : UserSchema, db : Session = Depends(get_db)):
     }
 
 
-@auth_router.post("/login")
+@auth_router.post("/login", status_code=200)
 async def login(data: UserLogin, db:Session = Depends(get_db)):
 
-    user = db.query(Farmer).filter(Farmer.email == data.email, Farmer.is_deleted == False).first()
+    user = db.query(User).filter(User.email == data.email, User.is_deleted == False).first()
     # if db_farmer and verify_password(data.password, db_farmer.hashed_password):
 
 
@@ -62,7 +62,7 @@ async def login(data: UserLogin, db:Session = Depends(get_db)):
 
     # Generate JWT Token
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTE)
-    
+
     access_token = create_access_token(
         data={"sub": str(user.user_id), "role" : user.role},
         expires_delta=access_token_expires
@@ -71,8 +71,7 @@ async def login(data: UserLogin, db:Session = Depends(get_db)):
     return {"access_token": access_token, "token_type": "bearer"}
 
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
-@auth_router.get("/token-data")
+@auth_router.get("/token-data", status_code=200)
 async def get_token_data(current_user : dict = Depends(get_current_user)):
     return current_user
