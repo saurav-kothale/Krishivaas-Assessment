@@ -9,6 +9,7 @@ class Crop(Base, BaseModel):
 
     id = Column(String, primary_key=True)
     farm_id = Column(String, ForeignKey('farm.farm_id'), nullable=False)
+    user_id = Column(String, ForeignKey('User.user_id'))
     crop_type = Column(String, nullable=False)
     health_status = Column(String, nullable=False, default="pending")
     document_url = Column(String, nullable=True)
